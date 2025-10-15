@@ -1,0 +1,131 @@
+{
+    "status": true,
+    "tasks": [
+        {
+            "id": 8, // для API запроса 
+            "title": "Ежедневный бонус", // для вывода на экран
+            "description": null, // ❗️ можно убрать
+            "points": 20, // для вывода на экран
+            "system_name": "daily_bonus", // для отображения корректного экрана
+            "is_one_time": false, // ❗️ можно убрать
+            "is_active": true, // ❗️ можно убрать
+            "monthly_limit": null, // ❗️ можно убрать
+            "verification_type": "auto", // ❗️ можно убрать
+            "icon_url": "./images/icons/daily.svg", // для вывода на экран
+            "index": 1, // ❗️ можно убрать и сделать сортировку на backend
+            "completion_count": "0", // можно убрать
+            "availability_status": "available", // ❗️  можно убрать
+            "unavailable_reason": null, // ❗️ можно убрать
+            "is_available": true, // для отображения корректного экрана
+            "can_start": true // ❗️ можно убрать
+        },
+        {
+            "id": 2,
+            "title": "Кешбэк на покупку",
+            "description": null,
+            "points": 1,
+            "system_name": "cashback",
+            "is_one_time": false,
+            "is_active": true,
+            "monthly_limit": null,
+            "verification_type": "manual",
+            "icon_url": "./images/icons/cashback.svg",
+            "index": 2,
+            "completion_count": "0",
+            "availability_status": "available",
+            "unavailable_reason": null,
+            "is_available": true,
+            "can_start": true
+        },
+        {
+            "id": 3,
+            "title": "Подписка на Instagram",
+            "description": null,
+            "points": 50,
+            "system_name": "instagram_subscribe",
+            "is_one_time": true,
+            "is_active": true,
+            "monthly_limit": null,
+            "verification_type": "manual",
+            "icon_url": "./images/icons/insta_sub.svg",
+            "index": 3,
+            "completion_count": "0",
+            "availability_status": "available",
+            "unavailable_reason": null,
+            "is_available": true,
+            "can_start": true
+        },
+        {
+            "id": 4,
+            "title": "Подписка на TG-канал",
+            "description": null,
+            "points": 50,
+            "system_name": "telegram_subscribe",
+            "is_one_time": true,
+            "is_active": true,
+            "monthly_limit": null,
+            "verification_type": "auto",
+            "icon_url": "./images/icons/telegram_sub.svg",
+            "index": 4,
+            "completion_count": "0",
+            "availability_status": "available",
+            "unavailable_reason": null,
+            "is_available": true,
+            "can_start": true
+        },
+        {
+            "id": 5,
+            "title": "Бонус за отзыв",
+            "description": null,
+            "points": 250,
+            "system_name": "review",
+            "is_one_time": false,
+            "is_active": true,
+            "monthly_limit": null,
+            "verification_type": "manual",
+            "icon_url": "./images/icons/review.svg",
+            "index": 5,
+            "completion_count": "0",
+            "availability_status": "available",
+            "unavailable_reason": null,
+            "is_available": true,
+            "can_start": true
+        },
+        {
+            "id": 6,
+            "title": "Пригласить друга",
+            "description": null,
+            "points": 100,
+            "system_name": "referral",
+            "is_one_time": false,
+            "is_active": true,
+            "monthly_limit": 10,
+            "verification_type": "auto",
+            "icon_url": "./images/icons/refferal.svg",
+            "index": 6,
+            "completion_count": "0",
+            "availability_status": "available",
+            "unavailable_reason": null,
+            "is_available": true,
+            "can_start": true
+        },
+        {
+            "id": 7,
+            "title": "Stories в Instagram",
+            "description": null,
+            "points": 200,
+            "system_name": "instagram_story",
+            "is_one_time": false,
+            "is_active": true,
+            "monthly_limit": 1,
+            "verification_type": "manual",
+            "icon_url": "./images/icons/insta_story.svg",
+            "index": 7,
+            "completion_count": "0",
+            "availability_status": "available",
+            "unavailable_reason": null,
+            "is_available": true,
+            "can_start": true
+        }
+    ]
+}

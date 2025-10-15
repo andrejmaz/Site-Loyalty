@@ -1,0 +1,168 @@
+services:
+  traefik:
+    image: "traefik"
+    container_name: traefik
+    restart: always
+    command:
+      - "--api=true"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.mytlschallenge.acme.tlschallenge=true"
+      - "--certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}"
+      - "--certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"      
+    volumes:
+      - ./traefik_data:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:1.107.4
+    container_name: n8n
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "127.0.0.1:5678:5678"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.n8n.rule=Host(`${N8N_SUBDOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.n8n.tls=true
+      - traefik.http.routers.n8n.entrypoints=web,websecure
+      - traefik.http.routers.n8n.tls.certresolver=mytlschallenge
+      - traefik.http.middlewares.n8n.headers.SSLRedirect=true
+      - traefik.http.middlewares.n8n.headers.STSSeconds=315360000
+      - traefik.http.middlewares.n8n.headers.browserXSSFilter=true
+      - traefik.http.middlewares.n8n.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.n8n.headers.forceSTSHeader=true
+      - traefik.http.middlewares.n8n.headers.SSLHost=${DOMAIN_NAME}
+      - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.n8n.headers.STSPreload=true
+      - traefik.http.routers.n8n.middlewares=n8n@docker
+    environment:
+      - N8N_HOST=${N8N_SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://${N8N_SUBDOMAIN}.${DOMAIN_NAME}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - NODE_FUNCTION_ALLOW_EXTERNAL=*
+      - DB_TYPE=postgresdb
+      - DB_TABLE_PREFIX=n8n_
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_USER=postgres 
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - EXECUTIONS_DATA_MAX_AGE=336
+      - EXECUTIONS_DATA_PRUNE_MAX_COUNT=50000
+      - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+      - ./local-files:/files
+
+  postgres:
+    image: postgres:17.5-alpine
+    container_name: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "--host=localhost", "--username=postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_interval: 5s
+      start_period: 30s
+
+  directus:
+    image: directus/directus:11.10.2
+    container_name: directus
+    restart: always
+    depends_on:
+      - postgres
+    volumes:
+      - ./database:/directus/database
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+      - ./templates:/directus/templates
+    environment:
+      - PUBLIC_URL=https://${DIRECTUS_SUBDOMAIN}.${DOMAIN_NAME}
+      - SECRET=${DIRECTUS_SECRET}
+      - ADMIN_EMAIL=${SSL_EMAIL}
+      - ADMIN_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_CLIENT=pg
+      - DB_HOST=postgres
+      - DB_DATABASE=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_PORT=5432
+      - WEBSOCKETS_ENABLED=true
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.directus.entrypoints=web
+      - traefik.http.routers.directus.rule=Host(`${DIRECTUS_SUBDOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.directus-secure.entrypoints=websecure
+      - traefik.http.routers.directus-secure.rule=Host(`${DIRECTUS_SUBDOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.directus-secure.tls=true
+      - traefik.http.routers.directus-secure.service=directus
+      - traefik.http.routers.directus-secure.tls.certresolver=mytlschallenge
+      - traefik.http.services.directus.loadbalancer.server.port=8055
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: always
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+    labels:
+      - traefik.enable=true
+      # Основной домен
+      - traefik.http.routers.frontend.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.frontend.entrypoints=web,websecure
+      - traefik.http.routers.frontend.tls=true
+      - traefik.http.routers.frontend.tls.certresolver=mytlschallenge
+      # Тверь
+      - traefik.http.routers.frontend-tver.rule=Host(`tver.appmart.${DOMAIN_NAME}`)
+      - traefik.http.routers.frontend-tver.entrypoints=web,websecure
+      - traefik.http.routers.frontend-tver.tls=true
+      - traefik.http.routers.frontend-tver.tls.certresolver=mytlschallenge
+      # Уренгой
+      - traefik.http.routers.frontend-urengoy.rule=Host(`urengoy.appmart.${DOMAIN_NAME}`)
+      - traefik.http.routers.frontend-urengoy.entrypoints=web,websecure
+      - traefik.http.routers.frontend-urengoy.tls=true
+      - traefik.http.routers.frontend-urengoy.tls.certresolver=mytlschallenge
+      # Воронеж
+      - traefik.http.routers.frontend-voronezh.rule=Host(`voronezh.appmart.${DOMAIN_NAME}`)
+      - traefik.http.routers.frontend-voronezh.entrypoints=web,websecure
+      - traefik.http.routers.frontend-voronezh.tls=true
+      - traefik.http.routers.frontend-voronezh.tls.certresolver=mytlschallenge
+      # Сервис и middleware
+      - traefik.http.services.frontend.loadbalancer.server.port=80
+      - traefik.http.middlewares.frontend-headers.headers.SSLRedirect=true
+      - traefik.http.middlewares.frontend-headers.headers.STSSeconds=315360000
+      - traefik.http.middlewares.frontend-headers.headers.browserXSSFilter=true
+      - traefik.http.middlewares.frontend-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.frontend-headers.headers.forceSTSHeader=true
+      - traefik.http.middlewares.frontend-headers.headers.SSLHost=${DOMAIN_NAME}
+      - traefik.http.middlewares.frontend-headers.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.frontend-headers.headers.STSPreload=true
+      # Применяем middleware ко всем роутерам
+      - traefik.http.routers.frontend.middlewares=frontend-headers@docker
+      - traefik.http.routers.frontend-tver.middlewares=frontend-headers@docker
+      - traefik.http.routers.frontend-urengoy.middlewares=frontend-headers@docker
+      - traefik.http.routers.frontend-voronezh.middlewares=frontend-headers@docker

@@ -1,0 +1,38 @@
+[
+    {
+      "Схема": "public",
+      "Таблица": "point_transactions",
+      "Колонки": "id (integer(32) NOT NULL), created_at (timestamp with time zone), user_id (integer(32)), amount (integer(32)), transaction_type (character varying(255)), description (text), task_id (integer(32))",
+      "Ограничения": "FOREIGN KEY: user_id -> users(id), PRIMARY KEY: id, FOREIGN KEY: task_id -> tasks(id)"
+    },
+    {
+      "Схема": "public",
+      "Таблица": "store_items",
+      "Колонки": "id (integer(32) NOT NULL), created_at (timestamp with time zone NOT NULL), internal_id (character varying(255) NOT NULL), title (character varying(255)), main_photo (character varying(255)), photo_2 (character varying(255)), photo_3 (character varying(255)), photo_4 (character varying(255)), ratings_num (character varying(255)), rating (character varying(255)), sizes (character varying(255)), category (character varying(255)), male (character varying(255)), old_price (character varying(255)), price (character varying(255))",
+      "Ограничения": "PRIMARY KEY: id, UNIQUE: internal_id"
+    },
+    {
+      "Схема": "public",
+      "Таблица": "tasks",
+      "Колонки": "id (integer(32) NOT NULL), created_at (timestamp with time zone NOT NULL), title (character varying(255) NOT NULL), description (text), points (integer(32) NOT NULL), is_one_time (boolean), is_active (boolean NOT NULL), monthly_limit (integer(32)), verification_type (character varying(255)), icon_url (character varying(255)), index (integer(32)), system_name (character varying(25) NOT NULL)",
+      "Ограничения": "PRIMARY KEY: id"
+    },
+    {
+      "Схема": "public",
+      "Таблица": "user_tasks",
+      "Колонки": "id (integer(32) NOT NULL), created_at (timestamp with time zone NOT NULL), user_id (integer(32) NOT NULL), task_id (integer(32) NOT NULL), status (character varying(60) NOT NULL), points_awarded (integer(32)), completed_at (timestamp with time zone), verified_at (timestamp with time zone), comment (text), salebot_order_id (bigint(64) NOT NULL)",
+      "Ограничения": "FOREIGN KEY: task_id -> tasks(id), FOREIGN KEY: user_id -> users(id), PRIMARY KEY: id"
+    },
+    {
+      "Схема": "public",
+      "Таблица": "users",
+      "Колонки": "id (integer(32) NOT NULL), created_at (timestamp without time zone NOT NULL), first_name (character varying(60)), last_name (character varying(60)), tg_id (bigint(64) NOT NULL), tg_username (character varying(60)), avatar (character varying(255)), card_balance (integer(32) NOT NULL), level (character varying(60) NOT NULL), partner_id (integer(32))",
+      "Ограничения": "FOREIGN KEY: partner_id -> users(id), UNIQUE: tg_id, PRIMARY KEY: id"
+    },
+    {
+      "Схема": "public",
+      "Таблица": "wheel_requests",
+      "Колонки": "id (integer(32) NOT NULL), created_at (timestamp with time zone NOT NULL), user_id (bigint(64)), user_ip (character varying(255)), unic_review (boolean), unic_purchase (boolean), status (character varying(255)), prize (character varying(255)), marketplace (character varying(255)), user_phone (character varying(255)), review_url (character varying(255)), purchase_url (character varying(255))",
+      "Ограничения": "PRIMARY KEY: id"
+    }
+  ]
